@@ -1207,48 +1207,64 @@ jQuery     → e.preventDefault()
 
 ---
 
-25. setTimeout() / clearTimeout() / setInterval() / clearInterval()
+# 25. setTimeout() / clearTimeout() / setInterval() / clearInterval()
 
-시간과 관련된 JavaScript 기본 함수.
+시간과 관련된 JavaScript 기본 함수다.
 
-시간 단위는 ms(밀리초).
+시간 단위는 **ms(밀리초)** 를 사용한다.
 
+```text
 1000ms = 1초
 100ms  = 0.1초
-setTimeout()
+```
 
-일정 시간이 지난 뒤 한 번 실행한다.
+## setTimeout()
 
-JavaScript · jQuery 공통
+일정 시간이 지난 뒤 **한 번 실행**한다.
+
+### JavaScript · jQuery 공통
+
+```javascript
 setTimeout(function () {
 
 }, 시간);
+```
 
 예:
 
+```javascript
 setTimeout(function () {
     console.log('1초 뒤 실행');
 }, 1000);
+```
 
 의미:
 
+```text
 1초 기다림
 ↓
 코드 한 번 실행
 ↓
 종료
-clearTimeout()
+```
 
-실행 예정인 setTimeout()을 취소할 때 사용한다.
+---
 
+## clearTimeout()
+
+실행 예정인 `setTimeout()`을 취소할 때 사용한다.
+
+```javascript
 var timer = setTimeout(function () {
     console.log('1초 뒤 실행');
 }, 1000);
 
 clearTimeout(timer);
+```
 
 의미:
 
+```text
 setTimeout 실행 예약
 ↓
 timer 변수에 해당 타이머 저장
@@ -1256,9 +1272,16 @@ timer 변수에 해당 타이머 저장
 clearTimeout(timer)
 ↓
 예약된 실행 취소
+```
+
+```text
 setTimeout()   → 일정 시간 뒤 한 번 실행
 clearTimeout() → setTimeout 실행 취소
-회사에서 사용했던 setTimeout() 예
+```
+
+### 회사에서 사용했던 setTimeout() 예
+
+```javascript
 if (tabWidth === 0) {
     if ((retry || 0) < 10) {
         setTimeout(function () {
@@ -1268,9 +1291,11 @@ if (tabWidth === 0) {
 
     return;
 }
+```
 
 의미:
 
+```text
 categoryTab 너비가 아직 0이면
 ↓
 0.1초 기다린다
@@ -1278,32 +1303,37 @@ categoryTab 너비가 아직 0이면
 다시 확인한다
 ↓
 최대 10번 반복
+```
 
 앱 재실행 직후 DOM 크기 계산이 끝나지 않은 문제를 보완하기 위해 사용했다.
 
-이 코드는 setTimeout() 자체가 반복하는 것이 아니라,
+이 코드는 `setTimeout()` 자체가 반복하는 것이 아니라, `setCategoryTabAlign()` 함수 안에서 다시 `setTimeout()`을 실행하는 방식으로 재시도하고 있다.
 
-setCategoryTabAlign()
+---
 
-함수 안에서 다시 setTimeout()을 실행하는 방식으로 재시도하고 있다.
+## setInterval()
 
-setInterval()
+일정 시간마다 **계속 반복 실행**한다.
 
-일정 시간마다 계속 반복 실행한다.
+### JavaScript · jQuery 공통
 
-JavaScript · jQuery 공통
+```javascript
 setInterval(function () {
 
 }, 시간);
+```
 
 예:
 
+```javascript
 setInterval(function () {
     console.log('1초마다 실행');
 }, 1000);
+```
 
 의미:
 
+```text
 1초 기다림
 ↓
 실행
@@ -1313,18 +1343,25 @@ setInterval(function () {
 실행
 ↓
 계속 반복
-clearInterval()
+```
 
-실행 중인 setInterval() 반복을 중지한다.
+---
 
+## clearInterval()
+
+실행 중인 `setInterval()` 반복을 중지한다.
+
+```javascript
 var timer = setInterval(function () {
     console.log('1초마다 실행');
 }, 1000);
 
 clearInterval(timer);
+```
 
 의미:
 
+```text
 setInterval 반복 시작
 ↓
 timer 변수에 타이머 저장
@@ -1332,30 +1369,40 @@ timer 변수에 타이머 저장
 clearInterval(timer)
 ↓
 반복 중지
+```
+
+```text
 setInterval()   → 일정 시간마다 계속 반복
 clearInterval() → setInterval 반복 중지
-한 번에 비교
+```
+
+## 한 번에 비교
+
+```text
 setTimeout()
 → 일정 시간 뒤 한 번 실행
 
 clearTimeout()
 → setTimeout 실행 취소
 
-
 setInterval()
 → 일정 시간마다 반복 실행
 
 clearInterval()
 → setInterval 반복 중지
+```
 
 짝으로 외우면:
 
-setTimeout    ↔ clearTimeout
-setInterval   ↔ clearInterval
+```text
+setTimeout  ↔ clearTimeout
+setInterval ↔ clearInterval
+```
 
-setTimeout(), clearTimeout(), setInterval(), clearInterval()은 모두 jQuery 함수가 아니라 JavaScript 기본 함수다.
+`setTimeout()`, `clearTimeout()`, `setInterval()`, `clearInterval()`은 모두 jQuery 함수가 아니라 **JavaScript 기본 함수**다.
 
 따라서 jQuery 코드 안에서도 똑같이 사용한다.
+
 ---
 
 # 26. innerWidth()
@@ -1480,6 +1527,710 @@ jQuery     → $(window).scrollTop()
 
 ---
 
+# 29. siblings()
+
+현재 요소와 **같은 부모를 가진 형제 요소**를 찾을 때 사용한다.
+
+회사 코드에서는 파일 선택 버튼 옆의 `.filehidden`, `.filename`처럼 **같은 줄에 있는 요소를 찾을 때** 자주 사용했다.
+
+### JavaScript
+
+JavaScript에는 jQuery의 `.siblings()`와 완전히 같은 단일 메서드는 없다.
+부모의 자식들을 가져온 뒤 현재 요소를 제외하는 방식으로 만들 수 있다.
+
+```javascript
+var siblings = Array.from(element.parentElement.children).filter(function (item) {
+    return item !== element;
+});
+```
+
+특정 형제 요소 하나만 필요하다면 부모에서 다시 찾는 방법이 더 간단할 때도 있다.
+
+```javascript
+var fileInput = element.parentElement.querySelector('.filehidden');
+```
+
+### jQuery
+
+```javascript
+$(this).siblings('.filehidden');
+```
+
+회사에서 사용했던 형태:
+
+```javascript
+$(document).on('click', '.btn-file-select', function () {
+    $(this).siblings('.filehidden').click();
+});
+```
+
+의미:
+
+```text
+this
+→ 현재 클릭한 .btn-file-select
+
+siblings('.filehidden')
+→ 같은 부모 안에 있는 .filehidden 형제 요소 찾기
+
+.click()
+→ 파일 input 클릭 실행
+```
+
+```text
+JavaScript → parentElement.children / querySelector()
+jQuery     → .siblings()
+```
+
+---
+
+# 30. empty()
+
+요소 **자체는 남겨두고 안쪽의 자식 요소만 전부 제거**할 때 사용한다.
+
+### JavaScript
+
+권장 방식:
+
+```javascript
+element.replaceChildren();
+```
+
+또는:
+
+```javascript
+element.innerHTML = '';
+```
+
+텍스트와 자식 노드를 모두 비울 때는 다음도 가능하다.
+
+```javascript
+element.textContent = '';
+```
+
+### jQuery
+
+```javascript
+$(element).empty();
+```
+
+회사에서 사용했던 형태:
+
+```javascript
+$('.setting-list').empty().hide();
+```
+
+의미:
+
+```text
+.setting-list 안의 항목 전부 제거
+→ 영역 자체는 DOM에 남아 있음
+→ hide()로 화면에서 숨김
+```
+
+`.empty()`와 `.remove()` 차이:
+
+```text
+.empty()  → 선택한 요소는 남기고 내부만 삭제
+.remove() → 선택한 요소 자체를 삭제
+```
+
+```text
+JavaScript → replaceChildren() / innerHTML = ''
+jQuery     → .empty()
+```
+
+---
+
+# 31. find()
+
+현재 요소 **안쪽의 자식·후손 요소 중에서 조건에 맞는 요소를 찾을 때** 사용한다.
+
+### JavaScript
+
+하나 찾기:
+
+```javascript
+var filename = admin.querySelector('.filename');
+```
+
+여러 개 찾기:
+
+```javascript
+var inputs = admin.querySelectorAll('input');
+```
+
+### jQuery
+
+```javascript
+$admin.find('.filename');
+```
+
+회사에서 자주 사용했던 형태:
+
+```javascript
+var $admin = $(this).closest('.admin-cmn');
+var $switch = $admin.find('.switch-input');
+```
+
+의미:
+
+```text
+closest()
+→ 바깥 부모 방향으로 찾기
+
+find()
+→ 안쪽 자식 방향으로 찾기
+```
+
+```text
+JavaScript → querySelector() / querySelectorAll()
+jQuery     → .find()
+```
+
+---
+
+# 32. eq()
+
+jQuery로 여러 요소를 찾았을 때 **몇 번째 요소 하나를 선택**할 때 사용한다.
+
+순서는 `0`부터 시작한다.
+
+```text
+0 → 첫 번째
+1 → 두 번째
+2 → 세 번째
+```
+
+### JavaScript
+
+```javascript
+var colorpickers = document.querySelectorAll('.colorpicker');
+var first = colorpickers[0];
+var second = colorpickers[1];
+```
+
+### jQuery
+
+```javascript
+var $first = $('.colorpicker').eq(0);
+var $second = $('.colorpicker').eq(1);
+```
+
+회사에서 링크 블록의 컬러피커 두 개를 구분할 때 사용했던 형태:
+
+```javascript
+var btnColor = $admin.find('.colorpicker').eq(0).val();
+var textColor = $admin.find('.colorpicker').eq(1).val();
+```
+
+```text
+JavaScript → NodeList[index]
+jQuery     → .eq(index)
+```
+
+---
+
+# 33. val()
+
+`input`, `textarea`, `select` 등의 **값을 읽거나 변경**할 때 사용한다.
+
+### JavaScript
+
+값 읽기:
+
+```javascript
+var value = input.value;
+```
+
+값 변경:
+
+```javascript
+input.value = '내용';
+```
+
+값 비우기:
+
+```javascript
+input.value = '';
+```
+
+### jQuery
+
+값 읽기:
+
+```javascript
+var value = $('input').val();
+```
+
+값 변경:
+
+```javascript
+$('input').val('내용');
+```
+
+값 비우기:
+
+```javascript
+$('input').val('');
+```
+
+회사 초기화 코드에서 사용했던 형태:
+
+```javascript
+$('.filehidden').val('');
+$('.admin-subtitle input[type="text"]').val('');
+```
+
+```text
+JavaScript → element.value
+jQuery     → .val()
+```
+
+---
+
+# 34. prop()
+
+체크박스의 `checked`, 비활성화의 `disabled`처럼 **현재 DOM 상태값(property)**을 읽거나 변경할 때 사용한다.
+
+### JavaScript
+
+```javascript
+checkbox.checked = true;
+checkbox.checked = false;
+```
+
+확인:
+
+```javascript
+if (checkbox.checked) {
+}
+```
+
+### jQuery
+
+```javascript
+$('.switch-input').prop('checked', true);
+$('.switch-input').prop('checked', false);
+```
+
+값 읽기:
+
+```javascript
+var checked = $('.switch-input').prop('checked');
+```
+
+`attr()`과 구분:
+
+```text
+.prop() → 현재 DOM 상태
+.attr() → HTML 속성값
+```
+
+체크박스 상태처럼 사용자가 동작하면서 바뀌는 값은 보통 `.prop()`을 사용한다.
+
+```text
+JavaScript → element.checked
+jQuery     → .prop('checked', ...)
+```
+
+---
+
+# 35. is(':checked')
+
+체크박스나 라디오가 **현재 체크되어 있는지 확인**할 때 자주 사용한다.
+
+### JavaScript
+
+```javascript
+if (checkbox.checked) {
+}
+```
+
+### jQuery
+
+```javascript
+if ($('.switch-input').is(':checked')) {
+}
+```
+
+회사에서 사용했던 형태:
+
+```javascript
+if ($admin.find('.switch-input').is(':checked')) {
+    updatePreview($admin);
+}
+```
+
+의미:
+
+```text
+해당 관리자 영역의 스위치가 ON이면
+→ 프리뷰 업데이트 실행
+```
+
+```text
+JavaScript → element.checked
+jQuery     → .is(':checked')
+```
+
+---
+
+# 36. not()
+
+선택한 요소들 중에서 **특정 조건에 맞는 요소만 제외**할 때 사용한다.
+
+### JavaScript
+
+```javascript
+var inputs = Array.from(document.querySelectorAll('input')).filter(function (input) {
+    return !input.matches('.colorpicker');
+});
+```
+
+### jQuery
+
+```javascript
+$('input').not('.colorpicker');
+```
+
+회사에서 새 블록 초기화 시 사용했던 형태:
+
+```javascript
+$newBlock.find('input[type="text"]').not('.colorpicker').val('');
+```
+
+의미:
+
+```text
+새 블록 안의 text input을 찾음
+→ .colorpicker는 제외
+→ 나머지 input 값만 비움
+```
+
+```text
+JavaScript → filter() + matches()
+jQuery     → .not()
+```
+
+---
+
+# 37. 이벤트 위임 .on()
+
+나중에 JavaScript로 새로 만들어지는 요소처럼 **페이지 로드 시점에는 아직 없는 요소에도 이벤트가 동작하도록** 할 때 사용한다.
+
+### JavaScript
+
+상위 요소에 이벤트를 걸고 실제 클릭된 요소를 확인한다.
+
+```javascript
+document.addEventListener('click', function (e) {
+    var button = e.target.closest('.btn-file-select');
+
+    if (!button) {
+        return;
+    }
+
+    console.log('파일 선택 버튼 클릭');
+});
+```
+
+### jQuery
+
+```javascript
+$(document).on('click', '.btn-file-select', function () {
+    console.log('파일 선택 버튼 클릭');
+});
+```
+
+직접 이벤트와 비교:
+
+```javascript
+$('.btn-file-select').on('click', function () {
+});
+```
+
+위 코드는 **현재 DOM에 이미 존재하는 `.btn-file-select`**에 이벤트를 연결한다.
+
+```javascript
+$(document).on('click', '.btn-file-select', function () {
+});
+```
+
+위 코드는 이벤트를 `document`에 걸고, 클릭이 올라왔을 때 `.btn-file-select`인지 확인하므로 **나중에 동적으로 만들어진 버튼에도 동작한다.**
+
+```text
+기존 요소만 대상 → $('.btn').on(...)
+동적 요소 포함     → $(document).on('event', '.btn', ...)
+```
+
+---
+
+# 38. click / input / change 이벤트 차이
+
+회사 관리자 화면에서 자주 사용한 이벤트들이다.
+
+### click
+
+버튼이나 요소를 **클릭했을 때** 실행한다.
+
+```javascript
+$(document).on('click', '.btn-file-select', function () {
+});
+```
+
+### input
+
+텍스트 입력값이 **입력되는 즉시** 실행된다.
+
+```javascript
+$(document).on('input', '.admin-subtitle input[type="text"]', function () {
+});
+```
+
+한 글자를 입력하거나 지울 때마다 바로 반응해야 하는 프리뷰에 적합하다.
+
+### change
+
+값이 **변경된 것이 확정될 때** 실행된다.
+
+```javascript
+$(document).on('change', '.filehidden', function () {
+});
+```
+
+파일 input, checkbox, radio, select 등에 자주 사용한다.
+
+```text
+click  → 클릭했을 때
+input  → 입력하는 즉시
+change → 값 변경이 확정됐을 때
+```
+
+이벤트 이름은 jQuery 전용이 아니라 브라우저의 JavaScript 이벤트를 jQuery의 `.on()`으로 연결해서 사용하는 것이다.
+
+---
+
+# 39. files[0]
+
+`<input type="file">`에서 사용자가 선택한 파일을 가져올 때 사용한다.
+
+`files`는 선택된 파일들을 담고 있는 `FileList`이고, `[0]`은 첫 번째 파일을 의미한다.
+
+### JavaScript
+
+```javascript
+var file = fileInput.files[0];
+```
+
+### jQuery 이벤트 안에서
+
+```javascript
+$(document).on('change', '.filehidden', function () {
+    var file = this.files[0];
+
+    if (!file) {
+        return;
+    }
+});
+```
+
+여기서 `this`는 실제 DOM 요소이므로 `this.files`를 바로 사용할 수 있다.
+
+```text
+this         → 실제 file input DOM 요소
+this.files   → 선택된 파일 목록
+this.files[0]→ 첫 번째 선택 파일
+```
+
+---
+
+# 40. FileReader
+
+브라우저에서 사용자가 선택한 파일의 내용을 **JavaScript로 읽을 때** 사용하는 Web API다.
+
+jQuery 기능이 아니라 JavaScript 기능이다.
+
+이미지 파일을 프리뷰할 때 자주 사용한다.
+
+```javascript
+var file = input.files[0];
+
+if (!file) {
+    return;
+}
+
+var reader = new FileReader();
+
+reader.onload = function (e) {
+    preview.src = e.target.result;
+};
+
+reader.readAsDataURL(file);
+```
+
+흐름:
+
+```text
+파일 선택
+→ files[0]으로 File 객체 가져오기
+→ new FileReader()
+→ readAsDataURL(file)로 읽기 시작
+→ 읽기가 끝나면 onload 실행
+→ e.target.result에 읽은 결과가 들어옴
+```
+
+이미지 프리뷰에서는 `e.target.result`를 `<img src>`에 넣어 사용할 수 있다.
+
+---
+
+# 41. remove()
+
+선택한 **요소 자체를 DOM에서 삭제**할 때 사용한다.
+
+### JavaScript
+
+```javascript
+element.remove();
+```
+
+### jQuery
+
+```javascript
+$(element).remove();
+```
+
+회사에서 리스트나 자유 블록 삭제 시 사용한 형태:
+
+```javascript
+$row.remove();
+```
+
+`.empty()`와 다시 비교:
+
+```text
+.empty()  → 요소 내부만 비움
+.remove() → 요소 자체를 삭제
+```
+
+---
+
+# 42. before() / append()
+
+동적으로 만든 요소를 **DOM의 특정 위치에 넣을 때** 사용한다.
+
+## before()
+
+현재 요소의 **바로 앞 형제 위치**에 삽입한다.
+
+### JavaScript
+
+```javascript
+footer.before(previewList);
+```
+
+### jQuery
+
+```javascript
+$('.footer').before('<div class="preview-add-list"></div>');
+```
+
+회사에서 프리뷰 자유블록 영역이 없을 때 생성할 때 사용했던 형태다.
+
+## append()
+
+선택한 요소의 **마지막 자식으로 추가**한다.
+
+### JavaScript
+
+```javascript
+parent.append(child);
+```
+
+### jQuery
+
+```javascript
+$('.setting-list').append($row);
+```
+
+```text
+before() → 선택 요소 앞에 형제로 삽입
+append() → 선택 요소 안쪽 마지막 자식으로 삽입
+```
+
+---
+
+# 이번 복습: 회사 코드 한 번에 읽기
+
+아래 형태에는 이번에 정리한 문법이 여러 개 같이 들어 있다.
+
+```javascript
+$(document).on('change', '.filehidden', function () {
+    var file = this.files[0];
+    var $admin = $(this).closest('.admin-cmn');
+
+    if (!file) {
+        return;
+    }
+
+    $(this).siblings('.filename').text(file.name);
+
+    if ($admin.find('.switch-input').is(':checked')) {
+        updatePreview($admin);
+    }
+});
+```
+
+위에서부터 읽으면:
+
+```text
+$(document).on(...)
+→ 동적으로 생긴 .filehidden까지 change 이벤트 감지
+
+this.files[0]
+→ 현재 file input에서 선택한 첫 번째 파일
+
+$(this).closest('.admin-cmn')
+→ 현재 input을 감싸는 가장 가까운 관리자 블록 찾기
+
+if (!file) return;
+→ 파일이 없으면 함수 종료
+
+$(this).siblings('.filename')
+→ 같은 부모에 있는 filename 형제 요소 찾기
+
+.text(file.name)
+→ 선택한 파일 이름 표시
+
+$admin.find('.switch-input')
+→ 해당 관리자 블록 내부의 스위치 찾기
+
+.is(':checked')
+→ 스위치가 켜져 있는지 확인
+
+updatePreview($admin)
+→ 켜져 있으면 해당 관리자 영역 기준으로 프리뷰 업데이트
+```
+
+이번 복습에서 묶어서 기억할 핵심:
+
+```text
+밖으로 올라가기 → closest()
+안으로 내려가기 → find()
+옆 형제 찾기    → siblings()
+몇 번째 고르기  → eq()
+입력값           → val()
+체크 상태 변경   → prop()
+체크 상태 확인   → is(':checked')
+내부 비우기      → empty()
+요소 자체 삭제   → remove()
+동적 이벤트      → $(document).on(...)
+파일 가져오기    → this.files[0]
+파일 읽기        → FileReader
+```
+
+---
+
 # JavaScript / jQuery 빠른 비교
 
 ```text
@@ -1534,6 +2285,62 @@ jQuery     → $(window).width()
 스크롤 위치
 JavaScript → window.scrollY
 jQuery     → $(window).scrollTop()
+
+형제 요소 찾기
+JavaScript → parentElement.children / parentElement.querySelector()
+jQuery     → .siblings()
+
+자식·후손 찾기
+JavaScript → element.querySelector() / querySelectorAll()
+jQuery     → .find()
+
+몇 번째 요소
+JavaScript → nodeList[index]
+jQuery     → .eq(index)
+
+input 값
+JavaScript → element.value
+jQuery     → .val()
+
+checkbox 상태 변경
+JavaScript → element.checked = true / false
+jQuery     → .prop('checked', true / false)
+
+checkbox 상태 확인
+JavaScript → element.checked
+jQuery     → .is(':checked')
+
+내부 자식 전부 제거
+JavaScript → element.replaceChildren()
+jQuery     → .empty()
+
+요소 자체 삭제
+JavaScript → element.remove()
+jQuery     → .remove()
+
+특정 요소 제외
+JavaScript → filter() + matches()
+jQuery     → .not()
+
+동적 요소 이벤트
+JavaScript → 상위 요소 addEventListener() + e.target.closest()
+jQuery     → $(document).on('event', 'selector', handler)
+
+파일 첫 번째 항목
+JavaScript → input.files[0]
+jQuery     → this.files[0]  // this는 실제 DOM 요소
+
+파일 읽기
+JavaScript → FileReader
+jQuery     → 별도 대체 문법 없음
+
+요소 앞에 삽입
+JavaScript → element.before()
+jQuery     → .before()
+
+마지막 자식으로 삽입
+JavaScript → parent.append()
+jQuery     → .append()
 ```
 
 ---
@@ -1556,6 +2363,7 @@ event / e       이벤트 객체
 e.target        실제 이벤트 발생 요소
 e.preventDefault()
 setTimeout()
+FileReader          파일 읽기 Web API
 ```
 
 jQuery는 JavaScript를 대신하는 별개의 언어가 아니라 **JavaScript 라이브러리**이기 때문에, 기본 JavaScript 문법 위에서 jQuery 기능을 함께 사용한다.
