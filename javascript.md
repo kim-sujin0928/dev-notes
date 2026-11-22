@@ -48,6 +48,8 @@
   - [5-7. if / else](#5-7-if--else)
   - [5-8. 함수](#5-8-함수)
   - [5-9. return](#5-9-return)
+  - [5-10. 조건식 결과를 바로 대입하기](#5-10-조건식-결과를-바로-대입하기)
+  - [5-11. 변수 이름 짓기 · 헷갈리는 이름 주의](#5-11-변수-이름-짓기--헷갈리는-이름-주의)
 - [6. 반복](#6-반복)
   - [6-1. forEach() / each()](#6-1-foreach--each)
 - [7. 타이머](#7-타이머)
@@ -64,8 +66,10 @@
   - [10-1. files[0]](#10-1-files0)
   - [10-2. FileReader](#10-2-filereader)
   - [10-3. 체크박스 전체 선택 / 전체 해제](#10-3-체크박스-전체-선택--전체-해제)
+  - [10-4. 조건이 다 채워지면 버튼 활성화 — disabled](#10-4-조건이-다-채워지면-버튼-활성화--disabled)
 - [11. 코드 읽기](#11-코드-읽기)
   - [11-1. file input change 이벤트 — closest · siblings · find · is](#11-1-file-input-change-이벤트--closest--siblings--find--is)
+  - [11-2. 체크박스 그룹 여러 개를 이벤트 위임 하나로 처리](#11-2-체크박스-그룹-여러-개를-이벤트-위임-하나로-처리)
 - [12. JavaScript / jQuery 빠른 비교](#12-javascript--jquery-빠른-비교)
 - [13. JavaScript 문법이라 jQuery에서도 그대로 사용하는 것](#13-javascript-문법이라-jquery에서도-그대로-사용하는-것)
 
@@ -248,6 +252,32 @@ items.forEach(function (item) {
 });
 ```
 
+#### 주의: NodeList에 속성을 바로 넣어도 아무 일도 안 일어난다
+
+이벤트뿐 아니라 `.checked`, `.hidden` 같은 속성도 **요소 하나하나에** 넣어야 한다.
+
+```javascript
+var items = document.querySelectorAll('.item');
+
+items.checked = true;            // ❌ 에러도 안 나고, 체크박스도 안 바뀜
+
+items.forEach(function (item) {  // ✅ 하나씩 꺼내서
+    item.checked = true;         //    꺼낸 요소에 넣기
+});
+```
+
+jQuery는 선택한 요소 **전부에 알아서** 적용해 줘서 이 차이를 모르고 넘어가기 쉽다.
+
+```javascript
+$('.item').prop('checked', true); // jQuery는 안에서 반복을 대신 해줌
+```
+
+```text
+NodeList(상자)  → 속성 · 이벤트 바로 못 넣음
+요소(상자에서 꺼낸 하나) → 넣을 수 있음
+jQuery          → 반복이 숨어 있어서 한 번에 됨
+```
+
 ### 1-3. length
 
 찾은 요소의 개수를 확인할 때 사용한다.
@@ -394,6 +424,37 @@ find()
 ```text
 JavaScript → querySelector() / querySelectorAll()
 jQuery     → .find()
+```
+
+#### 찾는 범위: `document.` vs `요소.`
+
+`querySelector()` 앞에 무엇을 붙이느냐에 따라 **찾는 범위**가 달라진다.
+
+```javascript
+document.querySelectorAll('.item');  // 페이지 전체에서 찾기
+where.querySelectorAll('.item');     // where 안에서만 찾기
+group.querySelectorAll('.item');     // group 안에서만 찾기
+```
+
+같은 클래스(`.item`)를 여러 영역에서 같이 쓸 때, 범위를 좁혀야 **다른 영역 요소까지 섞이지 않는다.**
+
+```javascript
+// 여행지 · 여행사 둘 다 .item을 쓰지만, 각 영역 안에서만 찾으니 안 섞임
+var whereChk   = where.querySelectorAll('.item:checked');
+var companyChk = company.querySelectorAll('.item:checked');
+```
+
+jQuery:
+
+```javascript
+$('.search-where').find('.item:checked');
+// 또는
+$('.item:checked', '.search-where');
+```
+
+```text
+document.querySelector() → 페이지 전체
+요소.querySelector()     → 그 요소 안쪽만 (jQuery .find()와 같은 역할)
 ```
 
 ### 1-6. siblings() — 형제 찾기
@@ -762,6 +823,47 @@ JavaScript → element.checked
 jQuery     → .prop('checked', ...)
 ```
 
+#### `.checked` 쉽게 이해하기
+
+체크박스마다 **"체크됐니?"라는 스위치**가 하나씩 달려 있고, 그 이름이 `checked`다.
+
+```text
+checked = true  → ☑️ 체크된 상태
+checked = false → ⬜ 빈 상태
+```
+
+| 하는 일 | JavaScript | jQuery |
+| --- | --- | --- |
+| 물어보기(읽기) | `box.checked` | `$(box).prop('checked')` |
+| 체크하기 | `box.checked = true` | `.prop('checked', true)` |
+| 풀기 | `box.checked = false` | `.prop('checked', false)` |
+| 다른 체크박스와 똑같이 | `box.checked = all.checked` | `.prop('checked', $(all).prop('checked'))` |
+
+마지막 줄처럼 `true` / `false`를 직접 쓰지 않고 **다른 체크박스의 상태를 그대로 넣으면**, if / else 없이 "켜져 있으면 켜고, 꺼져 있으면 꺼"를 한 줄로 쓸 수 있다.
+
+```javascript
+// if / else로 쓴 것
+if (all.checked) {
+    box.checked = true;
+} else {
+    box.checked = false;
+}
+
+// 한 줄로 (위와 같은 동작)
+box.checked = all.checked;
+```
+
+콘솔에서 직접 확인:
+
+```javascript
+var test = document.querySelector('input[type="checkbox"]');
+test.checked          // 지금 상태 true / false
+test.checked = true   // 화면에서 체크됨
+test.checked = false  // 다시 풀림
+```
+
+`disabled`, `hidden`도 같은 모양(`요소.속성 = true / false`)으로 쓴다.
+
 ### 2-5. is(':checked') — 체크 확인
 
 체크박스나 라디오가 **현재 체크되어 있는지 확인**할 때 자주 사용한다.
@@ -836,6 +938,28 @@ JavaScript → querySelectorAll('.item:checked')
 jQuery     → $('.item:checked')
            또는 .filter(':checked')
 ```
+
+#### 주의: `'.item:checked'`와 `item.checked`는 완전히 다르다
+
+단어가 같아서 헷갈리기 쉽다.
+
+| | `'.item:checked'` | `item.checked` |
+| --- | --- | --- |
+| 생김새 | 따옴표 안 | 따옴표 없음, 점(`.`)으로 연결 |
+| 정체 | CSS 선택자 (검색어) | 요소 하나의 체크 상태값 |
+| 뜻 | "class가 item이고 체크된 애들 **찾아와**" | "이 체크박스 **체크됐니?**" |
+| `item`은? | HTML의 class 이름 | 변수 이름 (forEach에서 붙인 이름 등) |
+| 결과 | NodeList(여러 개) | `true` / `false` |
+
+```javascript
+var chk = group.querySelectorAll('.item:checked'); // 체크된 것들을 찾아서 목록으로
+
+items.forEach(function (item) {   // 여기서 item은 내가 붙인 이름
+    item.checked = all.checked;   // 그 체크박스의 체크 상태를 바꿈
+});
+```
+
+변수 이름을 `item` 대신 `box`처럼 바꾸면 덜 헷갈린다. (5-11 참고)
 
 ---
 
@@ -1085,6 +1209,25 @@ this.value 없음
 → 숨김
 ```
 
+읽는 법 (헷갈릴 때):
+
+```text
+hidden          → "숨길래?" 라는 질문
+!this.value     → "값이 없니?" (값이 있니?를 뒤집은 것)
+
+where.hidden = !this.value;
+→ "값이 없으면 숨겨"
+```
+
+`!this.value`는 항상 false가 아니다. **날짜에 따라 true / false가 바뀐다.**
+주석을 쓸 때도 두 경우를 다 적어두면 나중에 안 헷갈린다.
+
+```javascript
+where.hidden = !this.value; // 날짜 값이 없으면(true) 숨김, 있으면(false) 보임
+```
+
+빈 문자열 `''`은 false처럼, 글자가 들어 있으면 true처럼 취급되는 원리는 5-3 참고.
+
 주의:
 
 HTML에 다음처럼 `display:none`을 직접 넣어둔 상태에서:
@@ -1331,6 +1474,35 @@ this    → 실제 DOM 요소
 $(this) → jQuery 객체
 ```
 
+#### `this` vs `e.target`
+
+| | 가리키는 것 | 부모에 이벤트를 걸었을 때 |
+| --- | --- | --- |
+| `this` | 이벤트를 **걸어둔** 요소 | 부모 (예: `.search`) |
+| `e.target` | 실제로 **누른 / 바뀐** 요소 | 클릭한 체크박스 |
+
+요소에 직접 이벤트를 걸면 둘이 같지만, **이벤트 위임(부모에 걸기)** 에서는 달라진다. 그래서 위임할 때는 `e.target`을 쓴다.
+
+#### 주의: 함수 안에 또 `function`이 있으면 `this`가 바뀐다
+
+```javascript
+all.addEventListener('change', function () {
+    items.forEach(function (item) {
+        item.checked = this.checked;  // ❌ 여기 this는 all이 아님
+    });
+});
+```
+
+`forEach` 안의 `function`은 새 함수라서 `this`가 다른 것을 가리킨다. 바깥 요소는 **변수 이름으로** 부른다.
+
+```javascript
+items.forEach(function (item) {
+    item.checked = all.checked;       // ✅ 변수 이름으로
+});
+```
+
+jQuery `.each()` 안에서도 `this`는 "지금 꺼낸 요소"로 바뀌니 같은 주의가 필요하다.
+
 ### 4-5. 이벤트 위임 .on()
 
 나중에 JavaScript로 새로 만들어지는 요소처럼 **페이지 로드 시점에는 아직 없는 요소에도 이벤트가 동작하도록** 할 때 사용한다.
@@ -1378,6 +1550,44 @@ $(document).on('click', '.btn-file-select', function () {
 동적 요소 포함     → $(document).on('event', '.btn', ...)
 ```
 
+#### 버블링: 위임이 되는 이유
+
+이벤트는 일어난 요소에서 끝나지 않고 **부모 → 조부모 → … → document**까지 차례로 올라간다. 이걸 **버블링**(거품이 위로 올라가는 것)이라고 한다.
+
+```text
+체크박스 클릭
+→ label
+→ fieldset
+→ .search   ← 여기에 이벤트를 걸어두면 안쪽 어디서 일어나도 감지됨
+→ document
+```
+
+그래서 부모 하나에만 이벤트를 걸고, `e.target`으로 "실제로 누가 바뀌었는지" 확인하면 된다.
+
+#### 위임의 또 다른 장점: 비슷한 코드 여러 개를 하나로 합치기
+
+동적 요소가 아니어도, **같은 동작을 하는 영역이 여러 개**면 부모에 한 번만 걸어서 코드를 합칠 수 있다.
+
+```javascript
+// 여행지 · 여행사에 따로 걸던 이벤트를 .search 하나로
+search.addEventListener('change', function (e) {
+    var group = e.target.closest('fieldset');   // 바뀐 체크박스가 속한 그룹
+
+    if (group !== where && group !== company) { // 다른 영역이면 무시
+        return;
+    }
+
+    // 여기부터는 group 안에서만 찾으면 여행지 · 여행사 둘 다 처리됨
+});
+```
+
+전체 코드는 11-2 참고.
+
+#### 주의: 위에서 `return`하면 그 아래 코드는 실행되지 않는다
+
+위 코드에서 날짜 input도 `.search` 안에 있어서 날짜를 바꾸면 이 함수가 실행되긴 한다. 하지만 맨 위에서 `return`으로 끝나버리기 때문에, 함수 **맨 아래에 둔 코드까지 도달하지 못한다.**
+날짜가 바뀔 때도 꼭 실행해야 하는 코드가 있다면 날짜 이벤트에 따로 넣어야 한다. (10-4 참고)
+
 ### 4-6. click / input / change 이벤트 차이
 
 회사 관리자 화면에서 자주 사용한 이벤트들이다.
@@ -1420,6 +1630,30 @@ change → 값 변경이 확정됐을 때
 ```
 
 이벤트 이름은 jQuery 전용이 아니라 브라우저의 JavaScript 이벤트를 jQuery의 `.on()`으로 연결해서 사용하는 것이다.
+
+#### 주의: 체크박스에는 click보다 change
+
+`label > input + span` 구조에서 글자(`span`)를 클릭하면 **label에서 한 번, input에서 한 번** 총 두 번 click이 일어난다. 게다가 첫 번째 click은 체크 상태가 **바뀌기 전**이라 체크된 개수를 세면 틀리게 나온다.
+
+```text
+click  → 두 번 실행될 수 있음 + 바뀌기 전 상태일 수 있음
+change → 상태가 바뀐 뒤 한 번만 실행
+```
+
+체크박스 · 라디오 · select · 날짜 input처럼 **값이 바뀌는 것**에는 `change`를 쓴다.
+
+#### 주의: disabled 버튼은 click 이벤트가 안 일어난다
+
+```javascript
+// ❌ 버튼이 처음에 disabled면 클릭 자체가 안 돼서 이 코드는 실행될 기회가 없음
+searchBtn.addEventListener('click', function () {
+    if (조건) {
+        searchBtn.disabled = false;
+    }
+});
+```
+
+잠긴 문 **안쪽**에 열쇠를 둔 것과 같다. 버튼을 켤지 말지는 버튼 click이 아니라 **조건이 바뀌는 곳(input · change)** 에서 확인해야 한다. (10-4 참고)
 
 ### 4-7. keydown
 
@@ -1568,6 +1802,36 @@ if ($('.popup').length && isMobile) {
 }
 ```
 
+#### `&&` / `||` 한 번에 비교
+
+비유:
+
+```text
+&& → "숙제 하고 양치 하면 게임 가능"   → 둘 다 해야 OK
+|| → "숙제 하거나 양치 하면 게임 가능" → 하나만 해도 OK
+```
+
+| A | B | `A && B` | `A \|\| B` |
+| --- | --- | --- | --- |
+| true | true | **true** | **true** |
+| true | false | false | **true** |
+| false | true | false | **true** |
+| false | false | false | false |
+
+조건 3개를 묶을 수도 있다.
+
+```javascript
+// 날짜가 있고 + 여행지 1개 이상 + 여행사 1개 이상일 때만
+if (date.value && whereChk.length > 0 && companyChk.length > 0) {
+    searchBtn.disabled = false;
+}
+```
+
+```text
+&& → 전부 true여야 true
+|| → 하나라도 true면 true
+```
+
 ### 5-3. `!` 부정 연산자
 
 `!`는 true / false를 반대로 만든다.
@@ -1607,6 +1871,31 @@ if (!$('.popup').length) {
 .popup 요소가 없으면
 ```
 
+#### 값이 "있다 / 없다"도 true / false처럼 쓴다
+
+```text
+false처럼 취급(falsy) → '' (빈 문자열), 0, null, undefined, NaN, false
+true처럼 취급(truthy) → 글자가 들어 있는 문자열, 0이 아닌 숫자, 요소 등
+```
+
+그래서 input 값에 `!`를 붙이면 "값이 없니?"가 된다.
+
+```javascript
+!''            // true  → 값이 없음
+!'2026-12-05'  // false → 값이 있음
+
+where.hidden = !date.value; // 날짜가 없으면 숨김
+```
+
+`!!`(두 번 뒤집기)는 값을 그냥 `true` / `false`로 바꿀 때 쓴다.
+
+```javascript
+!!'2026-12-05' // true
+!!''           // false
+
+$('.where').toggle(!!$(this).val()); // jQuery: 값이 있으면 보이고 없으면 숨김
+```
+
 ### 5-4. `===` 일치 연산자
 
 값과 타입이 모두 같은지 확인한다.
@@ -1634,6 +1923,26 @@ if ($(element).text() === '완료') {
 ```
 
 가능하면 `==`보다 `===`를 사용한다.
+
+#### `==`와 `===` 차이
+
+```javascript
+1 == '1'   // true  → 타입을 알아서 맞춘 뒤 비교 (느슨함)
+1 === '1'  // false → 숫자와 문자라 다름 (엄격함)
+0 == ''    // true  → 예상 못 한 결과가 나올 수 있음
+0 === ''   // false
+```
+
+`==`도 대부분 동작은 하지만, 예상 못 한 true가 나올 수 있어서 **항상 `===`로 쓰는 습관**을 들인다. 요소끼리 비교할 때도 마찬가지다.
+
+```javascript
+if (e.target === all) { }  // 누른 게 '전체' 체크박스인지
+```
+
+```text
+==  → 느슨한 비교 (타입 자동 변환)
+=== → 엄격한 비교 (값 + 타입) → 이걸 쓴다
+```
 
 ### 5-5. `!==` 불일치 연산자
 
@@ -1802,6 +2111,52 @@ function openModal(type) {
 }
 ```
 
+---
+
+#### 함수로 묶어서 여러 곳에서 부르기
+
+같은 확인을 여러 이벤트에서 해야 하면, 함수로 만들어 두고 필요한 곳에서 **이름만 불러서** 쓴다.
+
+```javascript
+function btnOn() {
+    // 확인할 내용
+}
+
+date.addEventListener('change', function () {
+    btnOn();   // 날짜가 바뀔 때
+});
+
+search.addEventListener('change', function () {
+    btnOn();   // 체크박스가 바뀔 때
+});
+```
+
+#### 주의: 매번 새로 세야 하는 값은 함수 **안**에서 찾는다
+
+```javascript
+// ❌ 함수 밖: 페이지가 열릴 때 딱 한 번만 셈 → 0개로 영원히 고정
+var whereChk = where.querySelectorAll('.item:checked');
+
+function btnOn() {
+    console.log(whereChk.length); // 계속 0
+}
+```
+
+```javascript
+// ✅ 함수 안: 부를 때마다 지금 상태로 다시 셈
+function btnOn() {
+    var whereChk = where.querySelectorAll('.item:checked');
+    console.log(whereChk.length);
+}
+```
+
+`querySelectorAll()` 결과는 **찾은 순간의 사진**이라, 나중에 체크해도 바뀌지 않는다.
+
+```text
+변하지 않는 요소 (영역, 버튼)     → 함수 밖에서 한 번 찾아도 됨
+계속 바뀌는 것 (체크된 것, 입력값) → 함수 안에서 그때그때 찾기
+```
+
 ### 5-9. return
 
 함수를 종료하거나 값을 돌려준다.
@@ -1843,6 +2198,121 @@ jQuery 코드에서도 동일하다.
 function getPopup() {
     return $('.popup');
 }
+```
+
+### 5-10. 조건식 결과를 바로 대입하기
+
+`===`, `>`, `!` 같은 조건식은 그 자체가 `true` / `false`라서, if / else 없이 **결과를 바로 대입**할 수 있다.
+
+**JavaScript · jQuery 공통**
+
+```javascript
+// if / else로 쓴 것
+if (chk.length === 0) {
+    company.hidden = true;
+} else {
+    company.hidden = false;
+}
+
+// 한 줄로 (위와 같은 동작)
+company.hidden = chk.length === 0;
+```
+
+읽는 법:
+
+```text
+company.hidden = chk.length === 0;
+→ 오른쪽부터 계산: "체크된 게 0개야?" → true / false
+→ 그 결과를 hidden에 넣음
+→ 0개면 숨김, 1개 이상이면 보임
+```
+
+같은 패턴:
+
+```javascript
+where.hidden = !date.value;                         // 날짜 없으면 숨김
+all.checked = items.length === chk.length;          // 전부 체크됐으면 '전체'도 체크
+searchBtn.disabled = !(date.value && chk.length > 0); // 조건이 안 맞으면 버튼 끄기
+```
+
+jQuery에서는 `.toggle(조건)`, `.prop('속성', 조건)`에 조건식을 바로 넣는다.
+
+```javascript
+$('.search-company').toggle(chk.length > 0);        // true면 보이고 false면 숨김
+$all.prop('checked', $items.length === $chk.length);
+```
+
+```text
+결과가 true / false 둘 중 하나로 정해지면 → if / else 대신 바로 대입
+```
+
+### 5-11. 변수 이름 짓기 · 헷갈리는 이름 주의
+
+이름이 비슷한 변수가 여러 개면 **어느 게 상자(여러 개)고 어느 게 하나인지** 헷갈려서 실수가 생긴다.
+
+실제로 했던 실수:
+
+```javascript
+var items = group.querySelectorAll('.item');   // 상자
+var chk = group.querySelectorAll('.item:checked');
+
+items.forEach(function (item) {
+    items.checked = all.checked;  // ❌ item(하나)이 아니라 items(상자)에 넣음
+    chk = all;                    // ❌ 체크된 목록 변수를 덮어써 버림
+});
+```
+
+`item` / `items` / `chk` / `'.item:checked'`처럼 **비슷한 이름이 4개**라서 생긴 실수다.
+
+#### 이름 짓는 요령
+
+```text
+1. 여러 개면 이름만 봐도 여러 개인 게 보이게
+   items(s 하나 차이) 보다 itemList
+2. 무엇인지 그대로
+   chk 보다 checkedList (체크된 것들 목록)
+3. forEach에서 꺼낸 하나는 상자와 확 다르게
+   item 보다 box
+```
+
+| 예전 | 바꾸면 | 뜻 |
+| --- | --- | --- |
+| `all` | `allBox` | '전체' 체크박스 1개 |
+| `items` | `itemList` | 개별 체크박스 전부 (상자) |
+| `chk` | `checkedList` | 체크된 개별 체크박스들 (상자) |
+| `item` (forEach) | `box` | 상자에서 꺼낸 하나 |
+
+```javascript
+itemList.forEach(function (box) {
+    box.checked = allBox.checked;
+});
+```
+
+따옴표 안의 `'.item'`은 HTML class 이름이라 **변수 이름을 바꿔도 그대로** 둔다.
+
+#### 주의: 이름을 바꾸면 쓴 곳 전부 바꿔야 한다
+
+위에서 `var items`를 `var option`으로 바꿨는데 아래에 `items.length`가 남아 있으면, 콘솔에 `items is not defined`(items가 뭔지 모르겠어) 에러가 난다.
+
+VS Code에서 변수 이름에 커서를 두고 **F2** → 새 이름 입력 → Enter 하면 쓴 곳이 **한 번에** 바뀐다.
+
+#### 주의: 같은 이름으로 다시 `var` 하면 덮어써진다
+
+```javascript
+var company = document.querySelector('.search-company'); // 여행사 영역
+
+function something() {
+    var company = '하나투어';  // 같은 이름 → 이 안에서는 영역이 아니라 글자가 됨
+    company.hidden = true;    // ❌ 동작 안 함
+}
+```
+
+이미 쓰고 있는 이름은 피해서 짓는다.
+
+```text
+이름이 헷갈리면 버그가 생긴다
+→ 상자(여러 개)와 하나를 확실히 다르게
+→ 바꿀 땐 F2로 한 번에
 ```
 
 ---
@@ -1948,6 +2418,86 @@ jQuery     → .each()
 여러 요소에 이벤트만 연결
 JavaScript → forEach() + addEventListener()
 jQuery     → 여러 요소 선택 후 .on()으로 한 번에 가능
+```
+
+#### 쉽게 이해하기: 사탕 봉지
+
+```text
+봉지.forEach(function(사탕){
+    사탕에 스티커 붙이기;
+});
+```
+
+| 부분 | 뜻 |
+| --- | --- |
+| `봉지` | 여러 개 담긴 상자 (`querySelectorAll` 결과) |
+| `.forEach(` | "하나씩 꺼내서 반복해줘" |
+| `function(사탕){ }` | 꺼낼 때마다 할 일 |
+| `사탕` | **지금 꺼낸 하나**에 붙인 이름 (내 맘대로) |
+| `{ }` 안 | 그 하나에게 할 일 |
+
+콘솔 연습:
+
+```javascript
+var fruits = ['사과', '바나나', '포도'];
+fruits.forEach(function (fruit) {
+    console.log(fruit + ' 꺼냄!');
+});
+// 사과 꺼냄! → 바나나 꺼냄! → 포도 꺼냄!
+```
+
+#### jQuery는 반복이 숨어 있다
+
+회사에서 쓰던 전체 선택 코드:
+
+```javascript
+$('.checkbox_all .all').click(function () {
+    if ($(this).prop('checked')) {
+        $('.checkbox .normal').prop('checked', true);
+    } else {
+        $('.checkbox .normal').prop('checked', false);
+    }
+});
+```
+
+`$('.normal').prop(...)`은 `.normal`이 10개면 **10개 전부 알아서** 바꿔준다. 순수 JavaScript의 `querySelectorAll()`은 상자에 담아주기만 해서, **하나씩 꺼내는 forEach가 필요**하다.
+
+순수 JavaScript로 바꾸면:
+
+```javascript
+document.querySelector('.checkbox_all .all').addEventListener('change', function () {
+    var normals = document.querySelectorAll('.checkbox .normal');
+    var allBox = this;
+
+    normals.forEach(function (box) {
+        box.checked = allBox.checked;   // forEach 안에서는 this 대신 변수 사용 (4-4 참고)
+    });
+});
+```
+
+jQuery도 더 짧게:
+
+```javascript
+$('.checkbox .normal').prop('checked', $(this).prop('checked'));
+```
+
+#### 주의: 자주 한 실수
+
+```javascript
+var all = group.querySelector('input[value="all"]');    // 1개
+var items = group.querySelectorAll('.item');            // 여러 개
+
+all.forEach(...)          // ❌ 1개짜리(querySelector)는 forEach 못 씀
+items.forEach(function (item) {
+    items.checked = ...;  // ❌ 상자(items)가 아니라
+    item.checked = ...;   // ✅ 꺼낸 하나(item)에 넣기
+});
+```
+
+```text
+forEach 앞   → 여러 개 담긴 상자 (querySelectorAll)
+괄호 안 이름 → 꺼낸 하나
+{ } 안       → 꺼낸 하나의 이름으로 작업
 ```
 
 ---
@@ -2644,6 +3194,109 @@ JavaScript → element.checked
 jQuery     → .prop('checked', ...)
 ```
 
+#### 양방향을 한 이벤트 안에서 처리하기
+
+'전체' 클릭과 개별 클릭을 한 함수에서 처리하려면, **누른 게 '전체'인지 먼저 나눈다.** 나누지 않으면 '전체'를 눌러도 개수 비교 코드가 실행돼서, 체크됐다가 바로 풀려버린다.
+
+```javascript
+group.addEventListener('change', function (e) {
+    var all = group.querySelector('input[value="all"]');
+    var items = group.querySelectorAll('.item');
+    var chk = group.querySelectorAll('.item:checked');
+
+    if (e.target === all) {
+        // '전체'를 눌렀으면 → 개별 전부를 '전체'와 같은 상태로
+        items.forEach(function (item) {
+            item.checked = all.checked;
+        });
+    } else {
+        // 개별을 눌렀으면 → 개수 비교해서 '전체' 체크 여부 결정
+        all.checked = items.length === chk.length;
+    }
+});
+```
+
+```text
+e.target === all → 전체 → 개별 (forEach)
+그 외            → 개별 → 전체 (개수 비교)
+```
+
+### 10-4. 조건이 다 채워지면 버튼 활성화 — disabled
+
+입력 조건이 모두 채워졌을 때만 버튼을 누를 수 있게 할 때 사용한다.
+
+HTML:
+
+```html
+<button type="button" class="search-btn" disabled>검색</button>
+```
+
+**JavaScript**
+
+```javascript
+var searchBtn = document.querySelector('.search-btn');
+
+function btnOn() {
+    // 체크 상태는 계속 바뀌니까 함수 안에서 매번 새로 찾기 (5-8 주의 참고)
+    var whereChk = where.querySelectorAll('.item:checked');
+    var companyChk = company.querySelectorAll('.item:checked');
+
+    if (date.value && whereChk.length > 0 && companyChk.length > 0) {
+        searchBtn.disabled = false;  // 버튼 켜기
+    } else {
+        searchBtn.disabled = true;   // 버튼 끄기
+    }
+}
+```
+
+한 줄로 쓰면 (5-10 참고):
+
+```javascript
+searchBtn.disabled = !(date.value && whereChk.length > 0 && companyChk.length > 0);
+```
+
+부르는 곳: **조건 중 하나라도 바뀌는 곳 전부**
+
+```javascript
+date.addEventListener('change', function () {
+    where.hidden = !this.value;
+    btnOn();   // 날짜가 바뀔 때
+});
+
+search.addEventListener('change', function (e) {
+    // ... 체크박스 처리 ...
+    btnOn();   // 체크박스가 바뀔 때 (forEach 안이 아니라 맨 아래에서 한 번)
+});
+```
+
+**jQuery**
+
+```javascript
+$('.search-btn').prop('disabled', false); // 켜기
+$('.search-btn').prop('disabled', true);  // 끄기
+```
+
+**주의**
+
+```text
+1. 버튼 click 이벤트 안에서 확인하면 안 됨
+   → disabled 버튼은 클릭이 안 돼서 실행될 기회가 없음 (4-6 참고)
+
+2. "켜질 때"만 생각하면 "꺼져야 할 때"를 놓침
+   → 다 고른 뒤 날짜를 지우면? 체크박스 이벤트는 안 일어나니 버튼이 켜진 채로 남음
+   → 그래서 날짜 이벤트에도 btnOn()을 넣어야 함
+   → 테스트할 때 켰다가 → 다시 끄기까지 확인
+
+3. forEach 안에서 부르면 개수만큼 여러 번 실행됨
+   → 처리가 끝난 맨 아래에서 한 번만 부르기
+```
+
+```text
+JavaScript → button.disabled = true / false
+jQuery     → .prop('disabled', true / false)
+확인 위치  → 조건이 바뀌는 모든 이벤트에서 같은 함수 호출
+```
+
 ---
 
 ## 11. 코드 읽기
@@ -2704,6 +3357,94 @@ updatePreview($admin)
 동적 이벤트      → $(document).on(...)
 파일 가져오기    → this.files[0]
 파일 읽기        → FileReader
+```
+
+### 11-2. 체크박스 그룹 여러 개를 이벤트 위임 하나로 처리
+
+'전체' + 개별 체크박스 묶음이 여러 개(예: 여행지, 여행사)일 때, 부모 하나에 이벤트를 걸어 한 번에 처리하는 코드.
+
+HTML 구조:
+
+```html
+<div class="search">
+    <fieldset class="search-where">
+        <input type="checkbox" value="all">            <!-- 전체 -->
+        <input type="checkbox" value="uk" class="item"> <!-- 개별 -->
+        ...
+    </fieldset>
+    <fieldset class="search-company">
+        <input type="checkbox" value="all">
+        <input type="checkbox" value="hanatour" class="item">
+        ...
+    </fieldset>
+</div>
+```
+
+```javascript
+var where = document.querySelector('.search-where');
+var company = document.querySelector('.search-company');
+var search = document.querySelector('.search');
+
+search.addEventListener('change', function (e) {
+    var group = e.target.closest('fieldset');
+
+    if (group !== where && group !== company) {
+        return;
+    }
+
+    var all = group.querySelector('input[value="all"]');
+    var option = group.querySelectorAll('.item');
+    var chk = group.querySelectorAll('.item:checked');
+
+    if (e.target === all) {
+        option.forEach(function (item) {
+            item.checked = all.checked;
+        });
+    } else {
+        all.checked = option.length === chk.length;
+    }
+
+    company.hidden = where.querySelectorAll('.item:checked').length === 0;
+    btnOn();
+});
+```
+
+위에서부터 읽으면:
+
+```text
+search.addEventListener('change', function (e)
+→ .search 안에서 무엇이든 바뀌면 실행 (버블링, 4-5)
+
+e.target.closest('fieldset')
+→ 바뀐 체크박스를 감싼 가장 가까운 fieldset = 어느 그룹인지 (1-4)
+
+if (group !== where && group !== company) return;
+→ 여행지 · 여행사 그룹이 아니면(예: 날짜) 여기서 끝 (5-5, 5-2, 5-9)
+
+group.querySelector / querySelectorAll
+→ 그 그룹 안에서만 찾기 → 두 그룹이 안 섞임 (1-5 찾는 범위)
+
+if (e.target === all)
+→ 누른 게 '전체'면 개별 전부를 같은 상태로 (forEach, 6-1)
+
+else
+→ 개별을 눌렀으면 개수가 같은지 비교해서 '전체' 체크 (5-10)
+
+company.hidden = ... === 0
+→ 여행지가 하나도 없으면 여행사 숨김 (5-10)
+
+btnOn()
+→ 검색 버튼 켤지 확인 (10-4)
+```
+
+이 코드에서 묶어서 기억할 핵심:
+
+```text
+부모에 한 번만 걸기 → 이벤트 위임 + e.target
+어느 그룹인지       → closest('fieldset')
+그룹 안에서만 찾기  → group.querySelector()
+전체 → 개별         → forEach + item.checked = all.checked
+개별 → 전체         → 개수 비교 결과를 바로 대입
 ```
 
 ---
@@ -2838,6 +3579,22 @@ jQuery     → .innerWidth()
 기본 동작 막기
 JavaScript → e.preventDefault()
 jQuery     → e.preventDefault()
+
+버튼 켜기 / 끄기
+JavaScript → button.disabled = false / true
+jQuery     → .prop('disabled', false / true)
+
+다른 체크박스와 같은 상태로
+JavaScript → box.checked = all.checked
+jQuery     → .prop('checked', $(all).prop('checked'))
+
+조건에 따라 보이기 / 숨기기
+JavaScript → element.hidden = 조건식
+jQuery     → .toggle(조건식)
+
+특정 영역 안에서만 찾기
+JavaScript → area.querySelectorAll('.item')
+jQuery     → $(area).find('.item')
 ```
 
 ---
@@ -2850,6 +3607,7 @@ jQuery     → e.preventDefault()
 ||              OR
 &&              AND
 !               부정
+!!              true / false로 바꾸기
 ===             일치
 !==             불일치
 ? :             삼항 연산자
@@ -2858,6 +3616,7 @@ function        함수
 return          함수 종료 / 값 반환
 event / e       이벤트 객체
 e.target        실제 이벤트 발생 요소
+forEach()       NodeList · 배열 반복 (jQuery 객체에는 .each())
 e.preventDefault()  기본 동작 막기
 setTimeout()        일정 시간 뒤 한 번 실행
 clearTimeout()      setTimeout 취소
